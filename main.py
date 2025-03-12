@@ -46,26 +46,26 @@ def TopKSelectionFromSortedList(ListOfItems, K:int, d:int, floorList, ceilList):
         
     return listToReturn
 
-def SecretaryAlgorithm(ListOfItems, K:int, N:int, d:int, floorList, ceilList, numItemsList):
+def SecretaryAlgorithm(ListOfItems, K:int, N:int, d:int, floorList, ceilList, numItemsList, warmup_factor = 1, walking_distance = 0):
     listToReturn = []
     C = [0] * d
     M = [0] * d
-    R = [math.floor(num / math.e) for num in numItemsList]
+    R = [math.floor(num / (warmup_factor * math.e)) for num in numItemsList]
     CategoriesMinHeaps = [[] for _ in range(d)]
 
     slack = K - sum(floorList)
-    r = math.floor(N / math.e)
+    r = math.floor(N / (warmup_factor * math.e))
 
     MaxNumOfElementsInHeap = [num for num in floorList]
     MaxNumOfElementsInIndependentHeap = slack
 
     T = []
-
     index = 0
     while len(listToReturn) < K:
         x = ListOfItems[index]
         index += 1
         i = x.category
+        walking_distance[0] += 1
 
         if sum(M) < r:
             Offer(T, x, MaxNumOfElementsInIndependentHeap)
