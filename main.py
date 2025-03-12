@@ -2,6 +2,7 @@ import pandas as pd
 import heapq
 import math
 
+
 class Item:
     def __init__(self, id, score, category):
         self.id = id
@@ -11,21 +12,22 @@ class Item:
     def __lt__(self, other):
         return self.score < other.score
 
-def TopKSelectionFromSortedList(ListOfItems, K:int, d:int, floorList, ceilList):
+
+def TopKSelectionFromSortedList(ListOfItems, K: int, d: int, floorList, ceilList):
     '''
     L : List of items sorted by score
     K : Number of items to select
     d : Number of categories
     Ki = number of items to select from i'th category
     floorList[i] <= ki <= ceilList[i]
-    
+
     Output: ListToReturn
     '''
-    
+
     listToReturn = []
-    
+
     C = [0] * d
-    
+
     total = sum(floorList)
     Slack = K - total
 
@@ -34,19 +36,21 @@ def TopKSelectionFromSortedList(ListOfItems, K:int, d:int, floorList, ceilList):
         x = ListOfItems[index]
         index += 1
         i = x.category
-        
+
         if C[i] < floorList[i]:
             listToReturn.append(x)
             C[i] += 1
-            
+
         elif C[i] < ceilList[i] and Slack > 0:
             listToReturn.append(x)
             C[i] += 1
             Slack -= 1
-        
+
     return listToReturn
 
-def SecretaryAlgorithm(ListOfItems, K:int, N:int, d:int, floorList, ceilList, numItemsList, warmup_factor = 1, walking_distance = 0):
+
+def SecretaryAlgorithm(ListOfItems, K: int, N: int, d: int, floorList, ceilList, numItemsList, warmup_factor=1,
+                       walking_distance=None):
     listToReturn = []
     C = [0] * d
     M = [0] * d
@@ -65,14 +69,17 @@ def SecretaryAlgorithm(ListOfItems, K:int, N:int, d:int, floorList, ceilList, nu
         x = ListOfItems[index]
         index += 1
         i = x.category
-        walking_distance[0] += 1
+
+        if walking_distance is not None:
+            walking_distance[0] += 1
 
         if sum(M) < r:
             Offer(T, x, MaxNumOfElementsInIndependentHeap)
 
         if M[i] < R[i]:
             Offer(CategoriesMinHeaps[i], x, MaxNumOfElementsInHeap[i])
-        elif ((C[i] < floorList[i]) and (x.score > getMinElement(CategoriesMinHeaps[i]))) or (numItemsList[i] - M[i] == floorList[i] - C[i]):
+        elif ((C[i] < floorList[i]) and (x.score > getMinElement(CategoriesMinHeaps[i]))) or (
+                numItemsList[i] - M[i] == floorList[i] - C[i]):
             heapq.heappop(CategoriesMinHeaps[i])
             listToReturn.append(x)
             C[i] += 1
@@ -92,6 +99,7 @@ def SecretaryAlgorithm(ListOfItems, K:int, N:int, d:int, floorList, ceilList, nu
 
     return listToReturn
 
+
 def Offer(MinHeap, x, maxNumOfElements):
     if maxNumOfElements <= 0:
         return
@@ -99,24 +107,28 @@ def Offer(MinHeap, x, maxNumOfElements):
         heapq.heappop(MinHeap)
         heapq.heappush(MinHeap, x)
         return
-    
+
     if len(MinHeap) < maxNumOfElements:
         heapq.heappush(MinHeap, x)
+
 
 def numFeasibleItems(d, C, M, ceilList, numItemsList):
     sum = 0
     for i in range(d):
         if (ceilList[i] - C[i] > 0):
             sum += (numItemsList[i] - M[i])
-    
+
     return sum
+
 
 def getMinElement(MinHeap):
     if len(MinHeap) == 0:
         return 0
     return MinHeap[0].score
 
-def process_file(file_path, K:int, d:int, floorList:list, ceilList:list, algorithm_type, N:int, numItemsList:list):
+
+def process_file(file_path, K: int, d: int, floorList: list, ceilList: list, algorithm_type, N: int,
+                 numItemsList: list):
     """
     Reads an Excel file, extracts valid data, and runs the appropriate selection algorithm.
 
@@ -156,10 +168,12 @@ def process_file(file_path, K:int, d:int, floorList:list, ceilList:list, algorit
         if algorithm_type == "static":
             selected_items = TopKSelectionFromSortedList(ListOfItems, K, d, floorList, ceilList)
         else:  # Online problem
-            selected_items = SecretaryAlgorithm(ListOfItems=ListOfItems, K=K, N=N, d=d, floorList=floorList, ceilList=ceilList, numItemsList=numItemsList)
+            selected_items = SecretaryAlgorithm(ListOfItems=ListOfItems, K=K, N=N, d=d, floorList=floorList,
+                                                ceilList=ceilList, numItemsList=numItemsList)
 
         # Convert the list of Item objects into a DataFrame
-        selected_df = pd.DataFrame([{"ID": item.id, "Score": item.score, "Category Number": item.category} for item in selected_items])
+        selected_df = pd.DataFrame(
+            [{"ID": item.id, "Score": item.score, "Category Number": item.category} for item in selected_items])
 
         return selected_df
 
@@ -220,6 +234,7 @@ def validate_inputs(K, d, floorList, ceilList, df, algorithm_type, N=None, numIt
         for i in range(d):
             actual_count = category_counts.get(i, 0)
             if numItemsList[i] != actual_count:
-                raise ValueError(f"Category {i}: Expected {numItemsList[i]} items, but the file contains {actual_count}.")
+                raise ValueError(
+                    f"Category {i}: Expected {numItemsList[i]} items, but the file contains {actual_count}.")
 
     return True  # If all checks pass
